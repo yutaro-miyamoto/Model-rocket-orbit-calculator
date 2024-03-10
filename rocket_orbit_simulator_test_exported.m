@@ -247,26 +247,13 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                     r0 = [0;0;0];
                     r_1_0 = r0;
 
-                    %　総消費燃料質量(消費される推進剤の全質量)
-                    m_fuel = app.fuel_weight_begin.Value - app.fuel_weight_end.Value;
-                    m_fuel = m_fuel * times_const;%kgへの単位変換
-
-                    % 全質量/g
-                    m = app.constant_weight.Value + app.fuel_weight_begin.Value;
-                    m = m * times_const;%kgへの単位変換
-
+                 
                     % 時間ステップ/s
                     dt = 0.001;
-
-                    %(dt)s当たりの消費燃料質量
-                    m_fuel_using = m_fuel / app.thrust_time.Value * dt;
-
-
-                    %推力/N
-                    F_r0 = [0;0;app.total_impulse.Value / app.thrust_time.Value];
-
-                    %平均比推力Isp
-                    Isp = app.total_impulse.Value / m_fuel / app.gravitational_acceleration.Value;
+                   
+                    % various_setting関数の確認
+                    [m_fuel, m, m_fuel_using, F_r0, Isp] = various_setting(app.fuel_weight_begin.Value, app.fuel_weight_end.Value,...
+                        times_const, app.constant_weight.Value, app.thrust_time.Value, app.total_impulse.Value, app.gravitational_acceleration.Value, dt);
 
                     % 初期速度を打ち上げ角度に基づいて計算
                     %v0 = [0;0;0];
