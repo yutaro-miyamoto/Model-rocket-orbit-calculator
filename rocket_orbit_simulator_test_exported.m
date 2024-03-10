@@ -312,22 +312,9 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
 
                         if t <= app.thrust_time.Value / dt %%ロケットついてるとき
-                            % 力
-                            %F = [0;0;-m*app.gravitational_acceleration.Value] + F_rv - Air_resistance;
-                            F_1 = calculate_force(m, app.gravitational_acceleration.Value, Air_resistance_1, F_rv);
-                            %F_1 = [0;0;-m*app.gravitational_acceleration.Value] + F_rv - Air_resistance_1;
 
-                            % 速度を更新
-                            %v = v0 + F / m * dt;
-                            v_1 = velocity(v_1_0,Dv,m_fuel_using,m,F_1,dt);
-                            %v_1 =  v_1_0 + Dv * m_fuel_using / m +  F_1 / m * dt;
-
-                            
-
-                            % 位置を更新
-                            %r = r0 + (v + wind_speed) * dt;
-                            r_1 = location(r_1_0, v_1, wind_speed, dt);
-                            %r_1 = r_1_0 + (v_1 + wind_speed) * dt;
+                            %when_rokcet_on関数の確認
+                            [v_1, r_1] = when_rocket_on(m,app.gravitational_acceleration.Value, Air_resistance_1, F_rv, v_1_0, r_1_0, m_fuel_using, Dv, wind_speed, dt);
 
                             % 結果を保存
                             %r_data(:,t) = r;
@@ -340,18 +327,8 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                         elseif  t > app.thrust_time.Value / dt && t <= (app.thrust_time.Value + app.parachute_time.Value) / dt
                             %%ロケット推進消えたE-
 
-                            % 力
-                            %F = [0;0;-m * app.gravitational_acceleration.Value] - Air_resistance;
-                            F_1 = [0;0;-m * app.gravitational_acceleration.Value] - Air_resistance_1;
-
-                            % 速度を更新
-                            %v = v0 + F / m * dt;
-                            v_1 = v_1_0 + F_1 / m * dt;
-
-
-                            % 位置を更新
-                            %r = r0 + (v + wind_speed) * dt;
-                            r_1 = r_1_0 + (v_1 + wind_speed) * dt;
+                            %when_rocket_off関数の確認
+                            [v_1,r_1] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance_1, v_1_0, r_1_0, wind_speed, dt);
 
                             % 結果を保存
                             %r_data(:,t) = r;
@@ -366,17 +343,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                             Air_resistance_1 = app.drag_coefficient_parachute.Value * 0.5 * app.rho.Value * sqrt(sum(v_1.^2))...
                                 * v_1 * app.parachute_S.Value * app.C_xo.Value;
 
-                            % 力
-                            %F = [0;0;-m*app.gravitational_acceleration.Value] - Air_resistance;
-                            F_1 = [0;0;-m * app.gravitational_acceleration.Value] - Air_resistance_1;
-
-                            % 速度を更新
-                            %v = v0 + F / m * dt;
-                            v_1 = v_1_0 + F_1 / m * dt;
-
-                            % 位置を更新
-                            %r = r0 + (v + wind_speed) * dt;
-                            r_1 = r_1_0 + (v_1 + wind_speed) * dt;
+                            [v_1,r_1] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance_1, v_1_0, r_1_0, wind_speed, dt);
 
                             % 結果を保存
                             %r_data(:,t) = r;
@@ -398,17 +365,16 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                         end
                         %end
 
+
                         % 次の時間ステップの準備
-                        % 速度ベクトルを用いたヘディングベクトルの生成
-                        %mag_v = sqrt(sum(v.^2));% 絶対値
-                        mag_1_v = sqrt(sum(v_1.^2));
+
+                        [heading_vector_1,mag_1_v] = heading_vector_fuction(v_1);
 
                         %v_data(t) = mag_v;
                         v_1_data(t) = mag_1_v;
+
                         t_data(t) = t*dt;
 
-                        %heading_vector = v / mag_v; %これ上のif文にいれないで！！
-                        heading_vector_1 = v_1 / mag_1_v;
                         F_rv = F_r0(3) * heading_vector;%動かなくなるよ～
 
                         Dv = app.total_impulse.Value / m_fuel * heading_vector_1;
@@ -467,11 +433,11 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                 % シミュレーションの結果をプロットするコード
                 %scatter(app.final_destination, landing_points(1,:), landing_points(2,:), 'magenta');
                 scatter(app.final_destination, landing_points_1(1,:), landing_points_1(2,:), 'yellow');
-                hold(app.orbit, 'off'); % Axes コンポーネントに hold off を設定
-                hold(app.final_destination, 'off'); % Axes コンポーネントに hold off を設定
-                hold(app.v_t_graph, 'off'); % Axes コンポーネントに hold off を設定
-                hold(app.h_t_graph, 'off'); % Axes コンポーネントに hold off を設定
-                hold(app.v_h_t_graph, 'off'); % Axes コンポーネントに hold off を設定
+                % hold(app.orbit, 'off'); % Axes コンポーネントに hold off を設定
+                % hold(app.final_destination, 'off'); % Axes コンポーネントに hold off を設定
+                % hold(app.v_t_graph, 'off'); % Axes コンポーネントに hold off を設定
+                % hold(app.h_t_graph, 'off'); % Axes コンポーネントに hold off を設定
+                % hold(app.v_h_t_graph, 'off'); % Axes コンポーネントに hold off を設定
 
             catch ME
                 % エラーが発生した場合の処理
