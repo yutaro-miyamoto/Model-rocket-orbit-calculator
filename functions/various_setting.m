@@ -1,6 +1,12 @@
+
+
+
+
+
+
 function [m_fuel, m, m_fuel_using, F_r0, Isp] =...
     various_setting(fuel_weight_begin, fuel_weight_end, times_const,constant_weight,...
-                    thrust_time, total_impulse, gravitational_acceleration, dt)
+                    thrust_time, total_impulse, dt)
  %　総消費燃料質量(消費される推進剤の全質量)
                     m_fuel = fuel_weight_begin - fuel_weight_end;
                     m_fuel = m_fuel * times_const;%kgへの単位変換
@@ -16,6 +22,6 @@ function [m_fuel, m, m_fuel_using, F_r0, Isp] =...
                     F_r0 = [0;0;total_impulse / thrust_time];
 
                     %平均比推力Isp
-                    Isp = total_impulse / m_fuel / gravitational_acceleration;
+                    Isp = total_impulse / m_fuel;
 end
 

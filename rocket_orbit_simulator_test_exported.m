@@ -240,50 +240,37 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                 num_simulations = app.num_simulations.Value;
 
                 % 最終到着地点を保存する配列
-                landing_points = zeros(2, num_simulations);
                 landing_points_1 = zeros(2, num_simulations);
                 for a = 1:num_simulations
                     % 初期位置
-                    r0 = [0;0;0];
-                    r_1_0 = r0;
-
+                    r_0 = [0;0;0];
                  
                     % 時間ステップ/s
                     dt = 0.001;
                    
                     % various_setting関数の確認
                     [m_fuel, m, m_fuel_using, F_r0, Isp] = various_setting(app.fuel_weight_begin.Value, app.fuel_weight_end.Value,...
-                        times_const, app.constant_weight.Value, app.thrust_time.Value, app.total_impulse.Value, app.gravitational_acceleration.Value, dt);
+                       times_const, app.constant_weight.Value, app.thrust_time.Value, app.total_impulse.Value, dt);
+
 
                     % 初期速度を打ち上げ角度に基づいて計算
-                    %v0 = [0;0;0];
-                    v_1_0 = [0;0;0];
-                    %v = v0;
-                    v_1 = v_1_0;
-                    %sv=v0.*v0;% ベクトルの二乗
-                    %dp=sum(sv);% 二乗和
-                    %mag_v=sqrt(dp);% 絶対値
+                    v_0 = [0;0;0];
+                    v = v_0;                    
 
                     heading_vector = [sind(app.theta.Value)*cosd(app.phi.Value);sind(app.theta.Value)*sind(app.phi.Value);cosd(app.theta.Value)];
                     F_rv = F_r0(3) * heading_vector;
-
-                    %平均排気速度v
-                    Dv = app.total_impulse.Value / m_fuel * heading_vector;
-
+                    
                     % 軌道データを保存する配列
-                    %r_data = zeros(3, tmax / dt);
-                    r_1_data = zeros(3, tmax / dt);
+                    r_data = zeros(3, tmax / dt);
 
                     % 初期位置を保存
-                    %r_data(:,1) = r0;
-                    r_1_data(:,1) = r0;
+                    r_data(:,1) = r_0;
 
                     % 時間データを保存する配列
                     t_data = zeros(1, tmax / dt);
 
                     % 速度データを保存する配列
-                    %v_data = zeros(1, tmax / dt);
-                    v_1_data = zeros(1, tmax / dt);
+                    v_data = zeros(1, tmax / dt);
 
                     % ループを実行
                     % 風速度
@@ -294,18 +281,16 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                     for t = 1:tmax/dt   %注意！！！この中の計算はすべてdt秒あたり、で考えないと値がおかしくなる。
 
                         %空気抵抗の計算
-                        %Air_resistance = app.drag_coefficient.Value * 0.5 * app.rho.Value * sqrt(sum(v.*v)) * v * app.S_vertical.Value;
-                        Air_resistance_1 = app.drag_coefficient.Value * 0.5 * app.rho.Value * sqrt(sum(v_1.^2)) * v_1 * app.S_vertical.Value;
+                        Air_resistance = app.drag_coefficient.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2)) * v * app.S_vertical.Value;
 
 
                         if t <= app.thrust_time.Value / dt %%ロケットついてるとき
 
                             %when_rokcet_on関数の確認
-                            [v_1, r_1] = when_rocket_on(m,app.gravitational_acceleration.Value, Air_resistance_1, F_rv, v_1_0, r_1_0, m_fuel_using, Dv, wind_speed, dt);
+                            [v, r] = when_rocket_on(m, app.gravitational_acceleration.Value, Air_resistance, v_0, r_0, m_fuel_using, wind_speed, dt, Isp, heading_vector);
 
                             % 結果を保存
-                            %r_data(:,t) = r;
-                            r_1_data(:,t) = r_1;
+                            r_data(:,t) = r;
 
                             % 質量の更新(燃料の消費)
                             m1 = m;
@@ -315,26 +300,22 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                             %%ロケット推進消えたE-
 
                             %when_rocket_off関数の確認
-                            [v_1,r_1] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance_1, v_1_0, r_1_0, wind_speed, dt);
+                            [v,r] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance_1, v_0, r_0, wind_speed, dt);
 
                             % 結果を保存
-                            %r_data(:,t) = r;
-                            r_1_data(:,t) = r_1;
+                            r_data(:,t) = r;
 
                         else%パラシュート展開。抗力係数と機体の投影面積が変わる。
                             %空気抵抗の更新
                             %https://nociws.github.io/parachute/
                             %を参照
-                            %Air_resistance = app.drag_coefficient_parachute.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2))...
-                            %    * v * app.parachute_S.Value * app.C_xo.Value;
-                            Air_resistance_1 = app.drag_coefficient_parachute.Value * 0.5 * app.rho.Value * sqrt(sum(v_1.^2))...
-                                * v_1 * app.parachute_S.Value * app.C_xo.Value;
+                            Air_resistance = app.drag_coefficient_parachute.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2))...
+                                * v * app.parachute_S.Value * app.C_xo.Value;
 
-                            [v_1,r_1] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance_1, v_1_0, r_1_0, wind_speed, dt);
+                            [v,r] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance, v, r, wind_speed, dt);
 
                             % 結果を保存
-                            %r_data(:,t) = r;
-                            r_1_data(:,t) = r_1;
+                            r_data(:,t) = r;
 
                         end
                         % rのz座標がゼロになった場合、ループから抜ける
@@ -345,9 +326,9 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                         % 結果を保存
                         %landing_points(:,a) = r(1:2); % x座標とy座標のみを保存する
                         %break;
-                        if r_1(3)<0                            
-                            r_1(3) = 0;
-                            landing_points_1(:,a) = r_1(1:2);
+                        if r(3)<0                            
+                            r(3) = 0;
+                            landing_points(:,a) = r(1:2);
                             break
                         end
                         %end
@@ -355,76 +336,48 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
                         % 次の時間ステップの準備
 
-                        [heading_vector_1,mag_1_v] = heading_vector_fuction(v_1);
+                        [heading_vector,mag_v] = heading_vector_fuction(v);
 
-                        %v_data(t) = mag_v;
-                        v_1_data(t) = mag_1_v;
+                        v_data(t) = mag_v;
 
                         t_data(t) = t*dt;
 
                         F_rv = F_r0(3) * heading_vector;%動かなくなるよ～
 
-                        Dv = app.total_impulse.Value / m_fuel * heading_vector_1;
+                        %Dv = app.total_impulse.Value / m_fuel * heading_vector_1;
 
-                        %r0 = r;
-                        r_1_0= r_1;
+                        r_0= r;
 
-                        %v0 = v;
-                        v_1_0 = v_1;
+                        v_0 = v;
 
                     end
 
-                    %plot3(app.orbit, r_data(1,:), r_data(2,:), r_data(3,:));
-                    %hold(app.orbit, 'on');
-                    plot3(app.orbit, r_1_data(1,:), r_1_data(2,:), r_1_data(3,:));
+                   
+                    plot3(app.orbit, r_data(1,:), r_data(2,:), r_data(3,:));
                     hold(app.orbit, 'on'); % Axes コンポーネントに hold on を設定
 
-                    %plot(app.v_t_graph, t_data(1,:), v_data(1,:));
-                    %hold(app.v_t_graph, 'on');
-                    plot(app.v_t_graph, t_data(1,:), v_1_data(1,:));
+                    plot(app.v_t_graph, t_data(1,:), v_data(1,:));
                     hold(app.v_t_graph, 'on');
 
-                    % plot(app.h_t_graph, t_data(1,:), r_data(3,:));
-                    % hold(app.h_t_graph, 'on');
-                    plot(app.h_t_graph, t_data(1,:), r_1_data(3,:));
+                    plot(app.h_t_graph, t_data(1,:), r_data(3,:));
                     hold(app.h_t_graph, 'on');
 
                     yyaxis(app.v_h_t_graph, 'left');
-                    % plot(app.v_h_t_graph, t_data(1,:), v_data(1,:));
-                    % hold(app.v_h_t_graph, 'on');
-                    plot(app.v_h_t_graph, t_data(1,:), v_1_data(1,:));
+                    plot(app.v_h_t_graph, t_data(1,:), v_data(1,:));
                     hold(app.v_h_t_graph, 'on');
-                    % if max(v_1_data(1,:))>max(v_data(1,:))
-                    %     ylim(app.v_h_t_graph, [0, max(v_1_data(1,:))]); % 左の軸の範囲を設定
-                    % else
-                    %     ylim(app.v_h_t_graph, [0, max(v_data(1,:))]);
-                    % end
-                    ylim(app.v_h_t_graph, [0, max(v_1_data(1,:))]);
+                    ylim(app.v_h_t_graph, [0, max(v_data(1,:))]);
 
                     yyaxis(app.v_h_t_graph, 'right');
-                    % plot(app.v_h_t_graph, t_data(1,:), r_data(3,:));
-                    % hold(app.v_h_t_graph, "on");
-                    plot(app.v_h_t_graph, t_data(1,:), r_1_data(3,:));
+                    plot(app.v_h_t_graph, t_data(1,:), r_data(3,:));
                     hold(app.v_h_t_graph, "on");
-                    % if max(r_data(3,:)) > max(r_1_data(3,:))
-                    %     ylim(app.v_h_t_graph, [0, max(r_data(3,:))]); % 右の軸の範囲を設定
-                    % else
-                    %     ylim(app.v_h_t_graph, [0, max(r_1_data(3,:))]);
-                    % end
-                    ylim(app.v_h_t_graph, [0, max(r_1_data(3,:))]);
+                    ylim(app.v_h_t_graph, [0, max(r_data(3,:))]);
 
                     ylabel(app.v_h_t_graph, '速度');
                     ylabel(app.v_h_t_graph, '高度');
 
                 end
                 % シミュレーションの結果をプロットするコード
-                %scatter(app.final_destination, landing_points(1,:), landing_points(2,:), 'magenta');
-                scatter(app.final_destination, landing_points_1(1,:), landing_points_1(2,:), 'yellow');
-                % hold(app.orbit, 'off'); % Axes コンポーネントに hold off を設定
-                % hold(app.final_destination, 'off'); % Axes コンポーネントに hold off を設定
-                % hold(app.v_t_graph, 'off'); % Axes コンポーネントに hold off を設定
-                % hold(app.h_t_graph, 'off'); % Axes コンポーネントに hold off を設定
-                % hold(app.v_h_t_graph, 'off'); % Axes コンポーネントに hold off を設定
+                scatter(app.final_destination, landing_points(1,:), landing_points(2,:), 'yellow');
 
             catch ME
                 % エラーが発生した場合の処理
