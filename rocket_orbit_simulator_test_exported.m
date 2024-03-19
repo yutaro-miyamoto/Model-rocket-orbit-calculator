@@ -66,7 +66,35 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         start_button                matlab.ui.control.StateButton
     end
 
-   
+
+    properties (Access = public)
+        velocity;
+        location;
+        m_fuel;
+        m;
+        m_fuel_using;
+        F_r0;
+        Isp;
+        heading_vector;
+        mag;
+        Air_resistance;
+    end
+
+    methods (Access = public)
+
+        function initializeAgeo(app)
+            %ageoクラスのインポート
+            import class.ageo.*; %classフォルダにあるageoクラスをインポート
+            %ageoクラスのインスタンスを作成
+            app.ageoObject = ageo();
+        end
+    end
+    methods (Access = {?ageo})
+        function startMyApp(app)
+            % App Designer の startFcn に相当するメソッド
+            app.initializeAgeo(); % Ageoクラスの初期化を行う
+        end
+    end
 
     % Callbacks that handle component events
     methods (Access = private)
@@ -74,7 +102,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app)
             % 外部関数があるディレクトリを追加
-        addpath('/functions');
+        %addpath('/functions');
         end
 
         % Value changed function: num_simulations
@@ -223,7 +251,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         function ButtonValueChanged(app, event)
             try
                 % シミュレーションの時間/s
-                tmax = 100.0;
+                tmax = app.simulation_time.Value;
 
                 %kg or g の決定
                 if strcmpi(app.checking_kg_or_g.Value, 'kg')
@@ -240,18 +268,18 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                 num_simulations = app.num_simulations.Value;
 
                 % 最終到着地点を保存する配列
-                landing_points_1 = zeros(2, num_simulations);
+                landing_points = zeros(2, num_simulations);
+
                 for a = 1:num_simulations
                     % 初期位置
                     r_0 = [0;0;0];
                  
                     % 時間ステップ/s
-                    dt = 0.001;
-                   
+                    dt = 0.01;%0.001に設定すると、配列用意系コマンドの動きが変になる
+                                  
                     % various_setting関数の確認
-                    [m_fuel, m, m_fuel_using, F_r0, Isp] = various_setting(app.fuel_weight_begin.Value, app.fuel_weight_end.Value,...
+                    [m_fuel, m, m_fuel_using, F_r0, Isp] = app.ageoObject.various_setting(app.fuel_weight_begin.Value, app.fuel_weight_end.Value,...
                        times_const, app.constant_weight.Value, app.thrust_time.Value, app.total_impulse.Value, dt);
-
 
                     % 初期速度を打ち上げ角度に基づいて計算
                     v_0 = [0;0;0];
@@ -268,15 +296,18 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
                     % 時間データを保存する配列
                     t_data = zeros(1, tmax / dt);
+                    t_data(1) = 0;    
 
                     % 速度データを保存する配列
                     v_data = zeros(1, tmax / dt);
+                    v_data(1) = 0;
+
 
                     % ループを実行
                     % 風速度
-                    %wind_speed = [app.wind_speed.Value*cosd(app.wind_degree.Value) + app.wind_effectness.Value * randn;...
-                    %    app.wind_speed.Value*sind(app.wind_degree.Value)+ app.wind_effectness.Value *randn;0];
-                    wind_speed = [0;0;0];%テスト用
+                    wind_speed = [app.wind_speed.Value*cosd(app.wind_degree.Value) + app.wind_effectness.Value * randn;...
+                        app.wind_speed.Value*sind(app.wind_degree.Value)+ app.wind_effectness.Value *randn;0];
+                    %wind_speed = [0;0;0];%テスト用
 
                     for t = 1:tmax/dt   %注意！！！この中の計算はすべてdt秒あたり、で考えないと値がおかしくなる。
 
@@ -287,7 +318,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                         if t <= app.thrust_time.Value / dt %%ロケットついてるとき
 
                             %when_rokcet_on関数の確認
-                            [v, r] = when_rocket_on(m, app.gravitational_acceleration.Value, Air_resistance, v_0, r_0, m_fuel_using, wind_speed, dt, Isp, heading_vector);
+                            [v, r] = app.ageoObject.when_rocket_on(m, app.gravitational_acceleration.Value, Air_resistance, v_0, r_0, m_fuel_using, wind_speed, dt, Isp, heading_vector);
 
                             % 結果を保存
                             r_data(:,t) = r;
@@ -300,7 +331,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                             %%ロケット推進消えたE-
 
                             %when_rocket_off関数の確認
-                            [v,r] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance_1, v_0, r_0, wind_speed, dt);
+                            [v,r] = app.ageoObject.when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance, v_0, r_0, wind_speed, dt);
 
                             % 結果を保存
                             r_data(:,t) = r;
@@ -312,7 +343,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                             Air_resistance = app.drag_coefficient_parachute.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2))...
                                 * v * app.parachute_S.Value * app.C_xo.Value;
 
-                            [v,r] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance, v, r, wind_speed, dt);
+                            [v,r] = app.ageoObject.when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance, v, r, wind_speed, dt);
 
                             % 結果を保存
                             r_data(:,t) = r;
@@ -336,11 +367,11 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
                         % 次の時間ステップの準備
 
-                        [heading_vector,mag_v] = heading_vector_fuction(v);
+                        [heading_vector,mag_v] = app.ageoObject.heading_vector_fuction(v);
 
-                        v_data(t) = mag_v;
+                        v_data(t+1) = mag_v;
 
-                        t_data(t) = t*dt;
+                        t_data(t+1) = t*dt;
 
                         F_rv = F_r0(3) * heading_vector;%動かなくなるよ～
 
@@ -397,18 +428,18 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 1086 685];
+            app.UIFigure.Position = [100 100 1086 701];
             app.UIFigure.Name = 'MATLAB App';
 
             % Create start_button
             app.start_button = uibutton(app.UIFigure, 'state');
             app.start_button.ValueChangedFcn = createCallbackFcn(app, @ButtonValueChanged, true);
             app.start_button.Text = 'シュミレーションスタート';
-            app.start_button.Position = [677 21 212 48];
+            app.start_button.Position = [677 37 212 48];
 
             % Create figures
             app.figures = uitabgroup(app.UIFigure);
-            app.figures.Position = [556 284 523 373];
+            app.figures.Position = [556 300 523 373];
 
             % Create Tab
             app.Tab = uitab(app.figures);
@@ -482,7 +513,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create fundamental_details
             app.fundamental_details = uipanel(app.UIFigure);
             app.fundamental_details.Title = '基礎物理量';
-            app.fundamental_details.Position = [313 142 230 313];
+            app.fundamental_details.Position = [313 158 230 313];
 
             % Create EditFieldLabel
             app.EditFieldLabel = uilabel(app.fundamental_details);
@@ -548,7 +579,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create simulation_details
             app.simulation_details = uipanel(app.UIFigure);
             app.simulation_details.Title = 'シュミレーション設定';
-            app.simulation_details.Position = [542 142 250 134];
+            app.simulation_details.Position = [542 158 250 134];
 
             % Create sEditFieldLabel
             app.sEditFieldLabel = uilabel(app.simulation_details);
@@ -579,7 +610,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create Panel_parachute
             app.Panel_parachute = uipanel(app.UIFigure);
             app.Panel_parachute.Title = 'パラシュート設定';
-            app.Panel_parachute.Position = [10 199 304 256];
+            app.Panel_parachute.Position = [10 215 304 256];
 
             % Create Label_5
             app.Label_5 = uilabel(app.Panel_parachute);
@@ -643,7 +674,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create rocket
             app.rocket = uipanel(app.UIFigure);
             app.rocket.Title = '機体諸元';
-            app.rocket.Position = [10 465 479 211];
+            app.rocket.Position = [10 481 479 211];
 
             % Create gLabel
             app.gLabel = uilabel(app.rocket);
@@ -746,7 +777,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create Panel_launch_deg
             app.Panel_launch_deg = uipanel(app.UIFigure);
             app.Panel_launch_deg.Title = '打ち上げ設定';
-            app.Panel_launch_deg.Position = [10 21 365 175];
+            app.Panel_launch_deg.Position = [10 37 365 175];
 
             % Create ZdegLabel
             app.ZdegLabel = uilabel(app.Panel_launch_deg);
@@ -781,7 +812,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create Button_2
             app.Button_2 = uibutton(app.UIFigure, 'push');
             app.Button_2.ButtonPushedFcn = createCallbackFcn(app, @Button_2Pushed, true);
-            app.Button_2.Position = [945 225 129 49];
+            app.Button_2.Position = [945 241 129 49];
             app.Button_2.Text = 'グラフの初期化';
 
             % Show the figure after all components are created

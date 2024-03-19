@@ -1,9 +1,4 @@
 
-
-
-
-
-
 function [m_fuel, m, m_fuel_using, F_r0, Isp] =...
     various_setting(fuel_weight_begin, fuel_weight_end, times_const,constant_weight,...
                     thrust_time, total_impulse, dt)

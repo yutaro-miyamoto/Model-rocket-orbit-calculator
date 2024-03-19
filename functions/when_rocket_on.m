@@ -6,7 +6,7 @@ function [velocity, location] = ...
 %   詳細説明をここに記述
 force = [0;0;-Weight * gravitational_acceleration] - air_resistance;
 
-velocity = velocity_before +  force / Weight * dt + Isp * gravitational_acceleration * log(Weight/(Weight-Weight_of_fuel_using)) * dt * heading_vector + wind_speed;
+velocity = velocity_before +  force / Weight * dt + Isp * gravitational_acceleration * log(Weight/(Weight-Weight_of_fuel_using)) * heading_vector + wind_speed;
 
 location = location_before + velocity * dt;
 end

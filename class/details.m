@@ -1,5 +1,5 @@
-classdef ageo
-    %AGEO このクラスの概要をここに記述
+classdef details
+    %DETAILS このクラスの概要をここに記述
     %   詳細説明をここに記述
     
     properties
@@ -7,8 +7,8 @@ classdef ageo
     end
     
     methods
-        function obj = ageo(inputArg1,inputArg2)
-            %AGEO このクラスのインスタンスを作成
+        function obj = details(inputArg1,inputArg2)
+            %DETAILS このクラスのインスタンスを作成
             %   詳細説明をここに記述
             obj.Property1 = inputArg1 + inputArg2;
         end
