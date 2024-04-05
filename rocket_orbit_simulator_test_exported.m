@@ -38,6 +38,14 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         Label_5                     matlab.ui.control.Label
         parachute_on_off            matlab.ui.control.DropDown
         figures                     matlab.ui.container.TabGroup
+        Tab                         matlab.ui.container.Tab
+        final_destination           matlab.ui.control.UIAxes
+        Tab_2                       matlab.ui.container.Tab
+        orbit                       matlab.ui.control.UIAxes
+        Tab_3                       matlab.ui.container.Tab
+        v_t_graph                   matlab.ui.control.UIAxes
+        Tab_4                       matlab.ui.container.Tab
+        h_t_graph                   matlab.ui.control.UIAxes
         Tab_5                       matlab.ui.container.Tab
         v_h_t_graph                 matlab.ui.control.UIAxes
         rocket                      matlab.ui.container.Panel
@@ -53,48 +61,12 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         Label_2                     matlab.ui.control.Label
         constant_weight             matlab.ui.control.NumericEditField
         gLabel                      matlab.ui.control.Label
-        S_vertical                  matlab.ui.control.NumericEditField
+        cross_sectional_area        matlab.ui.control.NumericEditField
         Label_4                     matlab.ui.control.Label
         checking_kg_or_g            matlab.ui.control.DropDown
-        Tab_4                       matlab.ui.container.Tab
-        h_t_graph                   matlab.ui.control.UIAxes
-        Tab_3                       matlab.ui.container.Tab
-        v_t_graph                   matlab.ui.control.UIAxes
-        Tab_2                       matlab.ui.container.Tab
-        orbit                       matlab.ui.control.UIAxes
-        Tab                         matlab.ui.container.Tab
-        final_destination           matlab.ui.control.UIAxes
     end
 
-    % 
-    % properties (Access = public)
-    %     velocity;
-    %     location;
-    %     m_fuel;
-    %     m;
-    %     m_fuel_using;
-    %     F_r0;
-    %     Isp;
-    %     heading_vector;
-    %     mag;
-    %     Air_resistance;
-    % end
-    % 
-    % methods (Access = public)
-    % 
-    %     function initializeAgeo(app)
-    %         %ageoクラスのインポート
-    %         import class.ageo.*; %classフォルダにあるageoクラスをインポート
-    %         %ageoクラスのインスタンスを作成
-    %         app.ageoObject = ageo();
-    %     end
-    % end
-    % methods (Access = {?ageo})
-    %     function startMyApp(app)
-    %         % App Designer の startFcn に相当するメソッド
-    %         app.initializeAgeo(); % Ageoクラスの初期化を行う
-    %     end
-    % end
+ 
 
     % Callbacks that handle component events
     methods (Access = private)
@@ -102,7 +74,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app)
             % 外部関数があるディレクトリを追加
-            addpath("functions\");
+            % addpath("/class");
         end
 
         % Value changed function: num_simulations
@@ -135,10 +107,10 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             value = app.fuel_weight_begin.Value;           
         end
 
-        % Value changed function: S_vertical
-        function S_verticalValueChanged(app, event)
+        % Value changed function: cross_sectional_area
+        function cross_sectional_areaValueChanged(app, event)
             % 機体断面積
-            value = app.S_vertical.Value;            
+            value = app.cross_sectional_area.Value;            
         end
 
         % Value changed function: drag_coefficient
@@ -273,21 +245,21 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                 for a = 1:num_simulations
                     % 初期位置
                     r_0 = [0;0;0];
-                 
+
                     % 時間ステップ/s
                     dt = 0.001;
-                                  
+
                     % various_setting関数の確認
-                    [m_fuel, m, m_fuel_using, F_r0, Isp] = various_setting(app.fuel_weight_begin.Value, app.fuel_weight_end.Value,...
-                       times_const, app.constant_weight.Value, app.thrust_time.Value, app.total_impulse.Value, dt);
+                    setting = various_setting(app.fuel_weight_begin.Value,app.fuel_weight_end.Value,times_const,app.constant_weight.Value,app.thrust_time.Value,app.total_impulse.Value,dt);
+                    m = setting.m;
 
                     % 初期速度を打ち上げ角度に基づいて計算
                     v_0 = [0;0;0];
-                    v = v_0;                    
+                    v = v_0;
 
                     heading_vector = [sind(app.theta.Value)*cosd(app.phi.Value);sind(app.theta.Value)*sind(app.phi.Value);cosd(app.theta.Value)];
-                    F_rv = F_r0(3) * heading_vector;
-                    
+                    % setting.F_rv = F_r0(3) * heading_vector;
+
                     % 軌道データを保存する配列
                     r_data = zeros(3, tmax / dt);
 
@@ -296,7 +268,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
                     % 時間データを保存する配列
                     t_data = zeros(1, tmax / dt);
-                    t_data(1) = 0;    
+                    t_data(1) = 0;
 
                     % 速度データを保存する配列
                     v_data = zeros(1, tmax / dt);
@@ -315,16 +287,15 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                             app.wind_speed.Value*sind(app.wind_degree.Value)+ app.wind_effectness.Value *randn;0];
 
                         %空気抵抗の計算
-                        Air_resistance = app.drag_coefficient.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2)) * v * app.S_vertical.Value;
-
+                        %Air_resistance = app.drag_coefficient.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2)) * v * app.cross_sectional_area.Value;
+                        Air_resistance = [0;0;0];
 
                         if t <= app.thrust_time.Value / dt %%ロケットついてるとき
 
-                            %when_rokcet_on関数の確認
-                            [v, r] = when_rocket_on(m, app.gravitational_acceleration.Value, Air_resistance, v_0, r_0, m_fuel_using, wind_speed, dt, F_rv, heading_vector);
-
-                            % 結果を保存
-                            r_data(:,t+1) = r;
+                            %力学計算
+                            k = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,setting.m_fuel_using,wind_speed,dt,setting.Isp,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
+                            v = k.velocity;
+                            r = k.location;
 
                             % 質量の更新(燃料の消費)
                             m1 = m;
@@ -332,12 +303,10 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
                         elseif  t > app.thrust_time.Value / dt && t <= (app.thrust_time.Value + app.parachute_time.Value) / dt
                             %%ロケット推進消えたE-
-
-                            %when_rocket_off関数の確認
-                            [v,r] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance, v_0, r_0, wind_speed, dt);
-
-                            % 結果を保存
-                            r_data(:,t+1) = r;
+                            %力学計算
+                            k = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,setting.m_fuel_using,wind_speed,dt,setting.Isp,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
+                            v = k.velocity;
+                            r = k.location;
 
                         else%パラシュート展開。抗力係数と機体の投影面積が変わる。
                             %空気抵抗の更新
@@ -346,42 +315,37 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                             Air_resistance = app.drag_coefficient_parachute.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2))...
                                 * v * app.parachute_S.Value * app.C_xo.Value;
 
-                            [v,r] = when_rocket_off(m, app.gravitational_acceleration.Value, Air_resistance, v, r, wind_speed, dt);
-
-                            % 結果を保存
-                            r_data(:,t+1) = r;
-
+                            %力学計算
+                            k = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,setting.m_fuel_using,wind_speed,dt,setting.Isp,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
+                            v = k.velocity;
+                            r = k.location;
                         end
-                        % rのz座標がゼロになった場合、ループから抜ける
-                        %if r(3)<0
-                        % z座標が無視されることを保証するために、rの3番目の要素を0にする
-                        %r(3) = 0;
 
-                        % 結果を保存
-                        %landing_points(:,a) = r(1:2); % x座標とy座標のみを保存する
-                        %break;
-                        if r(3)<0                            
-                            % r(3) = 0;
-                            landing_points(:,a) = r(1:2);
-                            % clearvars -global r_data -except r_data(:,1:t)
-                            % clearvars -global v_data -except v_data(1:t)
-                            % clearvars -global t_data -except t_data(1:t)
+                        % rのz座標がゼロになった場合、ループから抜ける
+                        if r(3)<0
+                            % z座標が無視されることを保証するために、rの3番目の要素を0にする
+                            r(3) = 0;
+                            % 結果を保存
+                            landing_points(:,a) = r(1:2);% x座標とy座標のみを保存する
                             break
                         end
-                        %end
 
 
                         % 次の時間ステップの準備
 
-                        [heading_vector,mag_v] = heading_vector_fuction(v);
+                        heading_vector = k.heading_vector;
+                        Air_resistance = k.air_resistance;
+
+                        % 結果を保存
+                        r_data(:,t+1) = r;
 
                         v_data(t+1) = mag_v;
 
                         t_data(t+1) = t*dt;
 
-                        F_rv = F_r0(3) * heading_vector;%動かなくなるよ～
+                        % F_rv = F_r0(3) * heading_vector;%動かなくなるよ～
 
-                        %Dv = app.total_impulse.Value / m_fuel * heading_vector_1;
+                        %Dv = app.total_impulse.Value / m_fuel * heading_vector;
 
                         r_0= r;
 
@@ -389,7 +353,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
                     end
 
-                   
+
                     plot3(app.orbit, r_data(1,1:t), r_data(2,1:t), r_data(3,1:t));
                     hold(app.orbit, "on"); % Axes コンポーネントに hold on を設定
 
@@ -412,7 +376,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                     ylabel(app.v_h_t_graph, '高度');
 
                 end
-                % シミュレーションの結果をプロットするコード
+                % 着陸地点をプロットするコード
                 scatter(app.final_destination, landing_points(1,:), landing_points(2,:), 'red','*');
 
             catch ME
@@ -455,11 +419,11 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             app.Label_4.Position = [25 100 98 22];
             app.Label_4.Text = '機体断面積/m^{2}';
 
-            % Create S_vertical
-            app.S_vertical = uieditfield(app.rocket, 'numeric');
-            app.S_vertical.ValueChangedFcn = createCallbackFcn(app, @S_verticalValueChanged, true);
-            app.S_vertical.Position = [157 98 69 28];
-            app.S_vertical.Value = 0.000625;
+            % Create cross_sectional_area
+            app.cross_sectional_area = uieditfield(app.rocket, 'numeric');
+            app.cross_sectional_area.ValueChangedFcn = createCallbackFcn(app, @cross_sectional_areaValueChanged, true);
+            app.cross_sectional_area.Position = [157 98 69 28];
+            app.cross_sectional_area.Value = 0.000625;
 
             % Create gLabel
             app.gLabel = uilabel(app.rocket);

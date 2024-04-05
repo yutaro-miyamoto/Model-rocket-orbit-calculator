@@ -1,0 +1,29 @@
+classdef details
+    %DETAILS このクラスの概要をここに記述
+    %   詳細説明をここに記述
+    
+    properties
+        Property{mustBeNumeric}
+    end
+    
+    methods        
+        function obj = details(val)
+            if nargin == 1
+                obj.Property = val;
+            end
+        end
+
+        function r = plus(o1,o2) %オブジェクト同士の足し算
+            r = [o1.Property]+[o2.Property];
+        end
+
+        function r = roundOff(obj) %数値の丸め
+            r = round([obj.Property],2);
+        end
+        
+        function r = multiplyBy(obj,n) %掛け算
+            r = [obj.Property]*n;
+        end
+    end
+end
+
