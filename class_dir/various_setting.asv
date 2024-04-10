@@ -13,7 +13,7 @@ classdef various_setting
     methods
         function obj =...
                 various_setting(fuel_weight_begin, fuel_weight_end, times_const,constant_weight,...
-                thrust_time, total_impulse, dt, gravitational_acceleration)
+                thrust_time, total_impulse, dt)
             
             %　総消費燃料質量(消費される推進剤の全質量)
             obj.m_fuel = fuel_weight_begin - fuel_weight_end;
@@ -30,7 +30,7 @@ classdef various_setting
             obj.F_r0 = [0;0;total_impulse / thrust_time];
             
             %平均比推力Isp
-            obj.Isp = (total_impulse/ thrust_time) / (obj.m_fuel * gravitational_acceleration) ;%(kgで処理しなくてはいけない)
+            obj.Isp = (total_impulse/ th ;%(kgで処理しなくてはいけない)
         end
 
     end

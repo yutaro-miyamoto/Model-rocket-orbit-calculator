@@ -66,7 +66,11 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         checking_kg_or_g            matlab.ui.control.DropDown
     end
 
- 
+
+    % Public properties that correspond to the Simulink model
+    properties (Access = public, Transient)
+        Simulation simulink.Simulation
+    end
 
     % Callbacks that handle component events
     methods (Access = private)
@@ -74,7 +78,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app)
             % 外部関数があるディレクトリを追加
-            % addpath("/class");
+            % addpath('./class_dir');
         end
 
         % Value changed function: num_simulations
@@ -250,7 +254,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                     dt = 0.001;
 
                     % various_setting関数の確認
-                    setting = various_setting(app.fuel_weight_begin.Value,app.fuel_weight_end.Value,times_const,app.constant_weight.Value,app.thrust_time.Value,app.total_impulse.Value,dt);
+                    setting = various_setting(app.fuel_weight_begin.Value,app.fuel_weight_end.Value,times_const,app.constant_weight.Value,app.thrust_time.Value,app.total_impulse.Value,dt,app.gravitational_acceleration.Value);
                     m = setting.m;
 
                     % 初期速度を打ち上げ角度に基づいて計算
@@ -293,20 +297,20 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                         if t <= app.thrust_time.Value / dt %%ロケットついてるとき
 
                             %力学計算
-                            k = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,setting.m_fuel_using,wind_speed,dt,setting.Isp,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
-                            v = k.velocity;
-                            r = k.location;
+                            elements = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,setting.m_fuel_using,wind_speed,dt,setting.Isp,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
+                            v = elements.velocity;
+                            r = elements.location;
 
                             % 質量の更新(燃料の消費)
                             m1 = m;
-                            m = m1 - m_fuel_using * dt;%dtあたりの燃料消費量を引く
+                            m = m1 - setting.m_fuel_using * dt;%dtあたりの燃料消費量を引く
 
                         elseif  t > app.thrust_time.Value / dt && t <= (app.thrust_time.Value + app.parachute_time.Value) / dt
                             %%ロケット推進消えたE-
                             %力学計算
-                            k = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,setting.m_fuel_using,wind_speed,dt,setting.Isp,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
-                            v = k.velocity;
-                            r = k.location;
+                            elements = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,0,wind_speed,dt,0,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
+                            v = elements.velocity;
+                            r = elements.location;
 
                         else%パラシュート展開。抗力係数と機体の投影面積が変わる。
                             %空気抵抗の更新
@@ -316,9 +320,9 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                                 * v * app.parachute_S.Value * app.C_xo.Value;
 
                             %力学計算
-                            k = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,setting.m_fuel_using,wind_speed,dt,setting.Isp,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
-                            v = k.velocity;
-                            r = k.location;
+                            elements = calculation(m,app.gravitational_acceleration.Value,Air_resistance,v_0,r_0,0,wind_speed,dt,0,heading_vector,app.drag_coefficient.Value,app.rho.Value,app.cross_sectional_area.Value);
+                            v = elements.velocity;
+                            r = elements.location;
                         end
 
                         % rのz座標がゼロになった場合、ループから抜ける
@@ -333,13 +337,13 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
                         % 次の時間ステップの準備
 
-                        heading_vector = k.heading_vector;
-                        Air_resistance = k.air_resistance;
+                        heading_vector = elements.heading_vector;
+                        Air_resistance = elements.air_resistance;
 
                         % 結果を保存
                         r_data(:,t+1) = r;
 
-                        v_data(t+1) = mag_v;
+                        v_data(t+1) = elements.mag;
 
                         t_data(t+1) = t*dt;
 
@@ -397,7 +401,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 965 629];
+            app.UIFigure.Position = [100 100 963 629];
             app.UIFigure.Name = 'MATLAB App';
 
             % Create rocket
