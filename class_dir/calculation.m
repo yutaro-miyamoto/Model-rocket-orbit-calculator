@@ -23,11 +23,11 @@ classdef calculation
             %ロケット推進がOnの時の弾道計算を行うメソッド
             force = [0;0;-Weight * gravitational_acceleration] - air_resistance;
             % 速度
-            obj.velocity = velocity_before +  force / Weight * dt + Isp * gravitational_acceleration * log(Weight/(Weight-Weight_of_fuel_using)) * heading_vector + wind_speed;
+            obj.velocity = velocity_before +  force / Weight * dt + Isp * gravitational_acceleration * log(Weight / (Weight-Weight_of_fuel_using)) * heading_vector+ wind_speed;
             % 位置
             obj.location = location_before + obj.velocity * dt;
             % 速度絶対値
-            obj.mag = sqrt(sum(velocity.^2));
+            obj.mag = sqrt(sum(obj.velocity.^2));
             % 機首方向単位ベクトル
             obj.heading_vector =  obj.velocity / obj.mag;
             % 空気抵抗
