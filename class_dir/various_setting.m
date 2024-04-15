@@ -3,10 +3,10 @@ classdef various_setting
     %   詳細説明をここに記述
 
     properties
-        m_fuel
-        m
-        m_fuel_using
-        F_r0
+        weight_fuel
+        weight
+        weight_fuel_using
+        thrust_power
         Isp
     end
 
@@ -16,21 +16,21 @@ classdef various_setting
                 thrust_time, total_impulse, dt, gravitational_acceleration)
             
             %　総消費燃料質量(消費される推進剤の全質量)
-            obj.m_fuel = fuel_weight_begin - fuel_weight_end;
-            obj.m_fuel = obj.m_fuel * times_const;%kgへの単位変換
+            obj.weight_fuel = fuel_weight_begin - fuel_weight_end;
+            obj.weight_fuel = obj.weight_fuel * times_const;%kgへの単位変換
 
             % 全質量/g
-            obj.m = constant_weight + fuel_weight_begin;
-            obj.m = obj.m * times_const;%kgへの単位変換
+            obj.weight = constant_weight + fuel_weight_begin;
+            obj.weight = obj.weight * times_const;%kgへの単位変換
 
             %(dt)s当たりの消費燃料質量
-            obj.m_fuel_using = obj.m_fuel / thrust_time * dt;
+            obj.weight_fuel_using = obj.weight_fuel / thrust_time * dt;
 
             %推力/N
-            obj.F_r0 = [0;0;total_impulse / thrust_time];
+            obj.thrust_power = [0;0;total_impulse / thrust_time];
             
-            %平均比推力Isp
-            obj.Isp = (total_impulse/ thrust_time) / (obj.m_fuel * gravitational_acceleration) ;%(kgで処理しなくてはいけない)
+            %平均比推力Isp/s
+            obj.Isp = (total_impulse/ thrust_time) / (obj.weight_fuel * gravitational_acceleration) ;%(kgで処理しなくてはいけない)
         end
 
     end

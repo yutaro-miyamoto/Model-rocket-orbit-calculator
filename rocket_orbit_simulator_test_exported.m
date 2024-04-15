@@ -277,22 +277,21 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                     % 速度データを保存する配列
                     v_data = zeros(1, tmax / dt);
                     v_data(1) = 0;
-
+                    
+                    %空気抵抗
+                    Air_resistance = [0;0;0];
 
                     % ループを実行
-                    % % 風速度
-                    % wind_speed = [app.wind_speed.Value*cosd(app.wind_degree.Value) + app.wind_effectness.Value * randn;...
-                    %     app.wind_speed.Value*sind(app.wind_degree.Value)+ app.wind_effectness.Value *randn;0];
-                    %wind_speed = [0;0;0];%テスト用
+                    % 風速度
+                    wind_speed = [app.wind_speed.Value*cosd(app.wind_degree.Value) + app.wind_effectness.Value * randn;...
+                        app.wind_speed.Value*sind(app.wind_degree.Value)+ app.wind_effectness.Value *randn;0];
+                    % wind_speed = [0;0;0];%テスト用
 
                     for t = 1:tmax/dt   %注意！！！この中の計算はすべてdt秒あたり、で考えないと値がおかしくなる。
-                        % 風速度
-                        wind_speed = [app.wind_speed.Value*cosd(app.wind_degree.Value) + app.wind_effectness.Value * randn;...
-                            app.wind_speed.Value*sind(app.wind_degree.Value)+ app.wind_effectness.Value *randn;0];
-
-                        %空気抵抗の計算
-                        %Air_resistance = app.drag_coefficient.Value * 0.5 * app.rho.Value * sqrt(sum(v.^2)) * v * app.cross_sectional_area.Value;
-                        Air_resistance = [0;0;0];
+                        % % 風速度
+                        % wind_speed = [app.wind_speed.Value*cosd(app.wind_degree.Value);...
+                        %     app.wind_speed.Value*sind(app.wind_degree.Value);0];
+                        
 
                         if t <= app.thrust_time.Value / dt %%ロケットついてるとき
 
@@ -382,6 +381,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                 end
                 % 着陸地点をプロットするコード
                 scatter(app.final_destination, landing_points(1,:), landing_points(2,:), 'red','*');
+                hold(app.final_destination,"on");
 
             catch ME
                 % エラーが発生した場合の処理
