@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addOn>
+  <identifier>b58e1757-f742-4d52-9531-55bfb5f4a2b2</identifier>
+  <displayType>Collection</displayType>
+  <translatedDisplayType>
+    <en_US>Collection</en_US>
+    <ja_JP>コレクション</ja_JP>
+    <ko_KR>컬렉션</ko_KR>
+    <zh_CN>集合</zh_CN>
+  </translatedDisplayType>
+  <name>Model rocket orbit calculator</name>
+  <author>Yutaro</author>
+  <version>1.0.2.1</version>
+  <downloadUrl>https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/b58e1757-f742-4d52-9531-55bfb5f4a2b2/ff5f7235-d731-42c8-b0a1-2f076014fb0d/packages/zip?src=addons_ml_desktop_install&amp;profile_id=32511367&amp;license=696035&amp;release_family=R2024b</downloadUrl>
+  <licenseUrl>https://addons.mathworks.com/registry/v1/b58e1757-f742-4d52-9531-55bfb5f4a2b2/1.0.2.1/-/license</licenseUrl>
+  <previewImageUrl>https://www.mathworks.com/responsive_image/160/120/0/0/0/cache/matlabcentral/mlc-downloads/downloads/b58e1757-f742-4d52-9531-55bfb5f4a2b2/ff5f7235-d731-42c8-b0a1-2f076014fb0d/images/1713178132.png</previewImageUrl>
+  <releaseNotesUrl>https://www.mathworks.com/add-ons/b58e1757-f742-4d52-9531-55bfb5f4a2b2/ff5f7235-d731-42c8-b0a1-2f076014fb0d/releaseNotes</releaseNotesUrl>
+  <installationFolder>Collections</installationFolder>
+</addOn>
