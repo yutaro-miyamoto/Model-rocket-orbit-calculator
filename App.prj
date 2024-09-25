@@ -1,0 +1,66 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration file="C:\Users\mymty\OneDrive\ドキュメント\GitHub\Yuici-roketo--\App.prj" location="C:\Users\mymty\OneDrive\ドキュメント\GitHub\Yuici-roketo--" name="App" target="target.mlapps" target-name="アプリのパッケージ化">
+    <param.appname>App</param.appname>
+    <param.authnamewatermark>Y.MIYAMOTO</param.authnamewatermark>
+    <param.email />
+    <param.company />
+    <param.icon />
+    <param.icons />
+    <param.summary>モデルロケットの軌道計算を行う。</param.summary>
+    <param.description />
+    <param.screenshot>C:\Users\mymty\AppData\Local\Temp\tp3e27b18b_289a_4a31_be02_8facb533c621.png</param.screenshot>
+    <param.version>1.0</param.version>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
+    <param.platforms />
+    <param.output>${PROJECT_ROOT}</param.output>
+    <param.guid>a2b280d1-c020-4fff-bfe9-9919946e2433</param.guid>
+    <unset>
+      <param.email />
+      <param.company />
+      <param.icon />
+      <param.icons />
+      <param.description />
+      <param.version />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
+      <param.platforms />
+      <param.output />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\rocket_orbit_simulator_test.mlapp</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\1235_0_rthetaphi1.png</file>
+      <file>${PROJECT_ROOT}\class_dir\calculation.m</file>
+      <file>${PROJECT_ROOT}\class_dir\various_setting.m</file>
+    </fileset.depfun>
+    <fileset.resources />
+    <fileset.package />
+    <build-deliverables>
+      <file location="C:\Users\mymty\OneDrive\ドキュメント\GitHub" name="Yuici-roketo--" optional="false">C:\Users\mymty\OneDrive\ドキュメント\GitHub\Yuici-roketo--</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2024b</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

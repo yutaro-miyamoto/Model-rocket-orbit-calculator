@@ -3,19 +3,24 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
-        start_button                    matlab.ui.control.StateButton
+        Lamp                            matlab.ui.control.Lamp
+        TextArea                        matlab.ui.control.TextArea
+        simulation_details              matlab.ui.container.Panel
+        num_simulations                 matlab.ui.control.NumericEditField
+        Label                           matlab.ui.control.Label
+        simulation_time                 matlab.ui.control.NumericEditField
+        SimulationtimesLabel            matlab.ui.control.Label
+        StopButton                      matlab.ui.control.Button
         Panel_launch_deg                matlab.ui.container.Panel
         phi                             matlab.ui.control.NumericEditField
         LaunchdirectionphidegLabel      matlab.ui.control.Label
         Image                           matlab.ui.control.Image
         theta                           matlab.ui.control.NumericEditField
         ZdegLabel                       matlab.ui.control.Label
+        start_button                    matlab.ui.control.StateButton
+        numCount                        matlab.ui.control.Label
+        CountLabel                      matlab.ui.control.Label
         InitializeallgraphsButton       matlab.ui.control.Button
-        simulation_details              matlab.ui.container.Panel
-        num_simulations                 matlab.ui.control.NumericEditField
-        Label                           matlab.ui.control.Label
-        simulation_time                 matlab.ui.control.NumericEditField
-        SimulationtimesLabel            matlab.ui.control.Label
         fundamental_details             matlab.ui.container.Panel
         wind_effectness                 matlab.ui.control.NumericEditField
         Label_10                        matlab.ui.control.Label
@@ -26,7 +31,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         gravitational_acceleration      matlab.ui.control.NumericEditField
         GravitationalaccelerationLabel  matlab.ui.control.Label
         rho                             matlab.ui.control.NumericEditField
-        Label_3                         matlab.ui.control.Label
         Panel_parachute                 matlab.ui.container.Panel
         C_xo                            matlab.ui.control.NumericEditField
         Label_8                         matlab.ui.control.Label
@@ -36,22 +40,11 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         Label_6                         matlab.ui.control.Label
         parachute_time                  matlab.ui.control.NumericEditField
         Label_5                         matlab.ui.control.Label
-        parachute_on_off                matlab.ui.control.DropDown
         figures                         matlab.ui.container.TabGroup
-        ThefinaldestinationTab          matlab.ui.container.Tab
-        final_destination               matlab.ui.control.UIAxes
-        OrbitTab                        matlab.ui.container.Tab
-        orbit                           matlab.ui.control.UIAxes
-        vtgraphTab                      matlab.ui.container.Tab
-        v_t_graph                       matlab.ui.control.UIAxes
-        htgraphTab                      matlab.ui.container.Tab
-        h_t_graph                       matlab.ui.control.UIAxes
         vhtTab                          matlab.ui.container.Tab
-        v_h_t_graph                     matlab.ui.control.UIAxes
         rocket                          matlab.ui.container.Panel
+        checking_kg_or_g                matlab.ui.control.DropDown
         WeightunitsettingLabel          matlab.ui.control.Label
-        cross_sectional_side_area       matlab.ui.control.NumericEditField
-        Label_12                        matlab.ui.control.Label
         fuel_weight_end                 matlab.ui.control.NumericEditField
         kgLabel                         matlab.ui.control.Label
         total_impulse                   matlab.ui.control.NumericEditField
@@ -60,13 +53,25 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         Label_11                        matlab.ui.control.Label
         thrust_time                     matlab.ui.control.NumericEditField
         InjectiontimesLabel             matlab.ui.control.Label
-        drag_coefficient                matlab.ui.control.NumericEditField
-        Label_2                         matlab.ui.control.Label
         constant_weight                 matlab.ui.control.NumericEditField
         gLabel                          matlab.ui.control.Label
+        drag_coefficient                matlab.ui.control.NumericEditField
+        Label_2                         matlab.ui.control.Label
+        cross_sectional_side_area       matlab.ui.control.NumericEditField
+        Label_12                        matlab.ui.control.Label
         cross_sectional_area            matlab.ui.control.NumericEditField
         Label_4                         matlab.ui.control.Label
-        checking_kg_or_g                matlab.ui.control.DropDown
+        v_h_t_graph                     matlab.ui.control.UIAxes
+        htgraphTab                      matlab.ui.container.Tab
+        h_t_graph                       matlab.ui.control.UIAxes
+        vtgraphTab                      matlab.ui.container.Tab
+        v_t_graph                       matlab.ui.control.UIAxes
+        OrbitTab                        matlab.ui.container.Tab
+        orbit                           matlab.ui.control.UIAxes
+        ThefinaldestinationTab          matlab.ui.container.Tab
+        final_destination               matlab.ui.control.UIAxes
+        parachute_on_off                matlab.ui.control.DropDown
+        Label_3                         matlab.ui.control.Label
     end
 
 
@@ -75,6 +80,32 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
         Simulation simulink.Simulation
     end
 
+
+    properties (Access = private)
+        Totalcount = 0 % Variable to store the counted value
+        %グラフ描画用データ初期化
+        r_pre_data_min_1 = 0;
+        r_pre_data_max_1 = 0;
+        r_pre_data_min_2 = 0;
+        r_pre_data_max_2 = 0;
+        r_pre_data_min_3 = 0;
+        r_pre_data_max_3 = 0;
+
+        v_pre_data_max = 0;
+        v_pre_data_min = 0;
+
+    end
+
+    methods (Access = private)
+
+        function results = increment(app)
+            results = app.Totalcount + 1;
+        end
+
+        function results = decrement(app)
+            results = app.Totalcount -1;
+        end
+    end
  
 
     % Callbacks that handle component events
@@ -224,6 +255,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
         % Button pushed function: InitializeallgraphsButton
         function InitializeallgraphsButtonPushed(app, event)
+            app.Lamp.Color = 'red';
             cla(app.orbit); % Axes コンポーネントをクリア
             cla(app.final_destination);
             cla(app.v_t_graph);
@@ -231,11 +263,28 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             cla(app.v_h_t_graph);
             yyaxis(app.v_h_t_graph,"left");
             cla(app.v_h_t_graph); % 左の軸を初期化
+            while app.Totalcount >0
+                app.Totalcount = app.decrement(); %図のスケール用カウンター初期化
+            end
+            app.numCount.Text = num2str(app.Totalcount);
+            app.r_pre_data_min_1 = 0;
+            app.r_pre_data_max_1 = 0;
+            app.r_pre_data_min_2 = 0;
+            app.r_pre_data_max_2 = 0;
+            app.r_pre_data_min_3 = 0;
+            app.r_pre_data_max_3 = 0;
+
+            app.v_pre_data_max = 0;
+            app.v_pre_data_min = 0;
+            
+            app.Lamp.Color = 'green';
         end
 
         % Callback function: orbit, start_button
         function ButtonValueChanged(app, event)
             try
+                app.Lamp.Color = 'red';
+                
                 % シミュレーションの時間/s
                 tmax = app.simulation_time.Value;
 
@@ -256,7 +305,14 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                 % 最終到着地点を保存する配列
                 landing_points = zeros(2, num_simulations);
 
+
+
                 for a = 1:num_simulations
+
+                    % カウントを1加える。
+                    app.Totalcount = app.increment();
+                    app.numCount.Text = num2str(app.Totalcount);
+
                     % 初期位置
                     r_0 = [0;0;0];
                     r = r_0;
@@ -350,7 +406,20 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                             r = elements.location;
                         end
 
-                        
+
+
+                        % 次の時間ステップの準備
+
+                        heading_vector = elements.heading_vector;
+                        Air_resistance = elements.air_resistance;
+
+                        % 結果を保存
+                        r_data(:,t) = r;
+
+                        v_data(t) = elements.mag;
+
+                        t_data(t) = t*dt;
+
                         if r(3)<0 % rのz座標がゼロになった場合、ループから抜ける
                             % z座標が無視されることを保証するために、rの3番目の要素を0にする
                             r(3) = 0;
@@ -360,48 +429,94 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                         end
 
 
-                        % 次の時間ステップの準備
-
-                        heading_vector = elements.heading_vector;
-                        Air_resistance = elements.air_resistance;
-
-                        % 結果を保存
-                        r_data(:,t+1) = r;
-
-                        v_data(t+1) = elements.mag;
-
-                        t_data(t+1) = t*dt;
-
                         % F_rv = F_r0(3) * heading_vector;%動かなくなるよ～
 
                         %Dv = app.total_impulse.Value / m_fuel * heading_vector;
 
-                        r_0= r;
+                        r_0 = r;
 
                         v_0 = v;
 
                     end
 
+                    % 取得データの最大値及び最小値を記録する
+                    if app.numCount == 1
+                        %位置情報に関するもの
+                        app.r_pre_data_min_1 = min(r_data(1,:));
+                        app.r_pre_data_max_1 = max(r_data(1,:));
 
-                    plot3(app.orbit, r_data(1,1:t), r_data(2,1:t), r_data(3,1:t));
+                        app.r_pre_data_min_2 = min(r_data(2,:));
+                        app.r_pre_data_max_2 = max(r_data(2,:));
+
+                        app.r_pre_data_min_3 = min(r_data(3,:));
+                        app.r_pre_data_max_3 = max(r_data(3,:));
+
+                        %速度データ
+                        app.v_pre_data_max = max(v_data(:));
+                        app.v_pre_data_min = min(v_data(:));
+
+                    else
+                        %位置データ
+                        if app.r_pre_data_min_1 > min(r_data(1,:))
+                            app.r_pre_data_min_1 = min(r_data(1,:));
+                        end
+                        if app.r_pre_data_max_1 < max(r_data(1,:))
+                            app.r_pre_data_max_1 = max(r_data(1,:));
+                        end
+                        if app.r_pre_data_min_2 > min(r_data(2,:))
+                            app.r_pre_data_min_2 = min(r_data(2,:));
+                        end
+                        if app.r_pre_data_max_2 < max(r_data(2,:))
+                            app.r_pre_data_max_2 = max(r_data(2,:));
+                        end
+                        if app.r_pre_data_min_3 > min(r_data(3,:))
+                            app.r_pre_data_min_3 = min(r_data(3,:));
+                        end
+                        if app.r_pre_data_max_3 < max(r_data(3,:))
+                            app.r_pre_data_max_3 = max(r_data(3,:));
+                        end
+
+                        %速度データ
+                        if app.v_pre_data_min > min(v_data(:))
+                            app.v_pre_data_min = min(v_data(:));
+                        end
+                        if app.v_pre_data_max < max(v_data(:))
+                            app.v_pre_data_max = max(v_data(:));
+                        end   
+                    end                 
+
+                    %軌道を表示する図の軸の最大値・最小値決定
+                    xlim(app.orbit, [app.r_pre_data_min_1-100, app.r_pre_data_max_1+100]);
+                    ylim(app.orbit, [app.r_pre_data_min_2-100, app.r_pre_data_max_2+100]);
+                    zlim(app.orbit, [0, app.r_pre_data_max_3+50]);
+
+                    %軌道表示図に軌道を表示
+                    plot3(app.orbit, r_data(1,1:t),r_data(2,1:t),r_data(3,1:t));
+                    drawnow
                     hold(app.orbit, "on"); % Axes コンポーネントに hold on を設定
-
-                    plot(app.v_t_graph, t_data(1,1:t), v_data(1,1:t),"-");
+                    
+                    %速度と時間の関係図を表示
+                    ylim(app.v_t_graph, [app.v_pre_data_min, app.v_pre_data_max]);
+                    plot(app.v_t_graph, t_data(1:t), v_data(1:t),"-");
                     hold(app.v_t_graph, "on");
 
-                    plot(app.h_t_graph, t_data(1,1:t), r_data(3,1:t),"-");
+                    %高さと時間の関係を表示
+                    ylim(app.h_t_graph, [app.r_pre_data_min_3, app.r_pre_data_max_3]);
+                    plot(app.h_t_graph, t_data(1:t), r_data(3,1:t),"-");
                     hold(app.h_t_graph, "on");
 
+                    %速度と高度の時間変化を両表示
+                    
                     yyaxis(app.v_h_t_graph, 'left');
-                    plot(app.v_h_t_graph, t_data(1,1:t), v_data(1,1:t), '-');
-                    hold(app.v_h_t_graph, "on");
-                    ylim(app.v_h_t_graph, [0, max(v_data(1,1:t))]);
+                    ylim(app.v_h_t_graph, [app.v_pre_data_min, app.v_pre_data_max]);
+                    plot(app.v_h_t_graph, t_data(1,1:t), v_data(1:t), '-');
+                    hold(app.v_h_t_graph, "on");                    
                     ylabel(app.v_h_t_graph, 'Velocity/ms^{-1}');
 
                     yyaxis(app.v_h_t_graph, 'right');
+                    ylim(app.v_h_t_graph, [app.r_pre_data_min_3, app.r_pre_data_max_3]);
                     plot(app.v_h_t_graph, t_data(1,1:t), r_data(3,1:t), ':');
-                    hold(app.v_h_t_graph, "on");
-                    ylim(app.v_h_t_graph, [0, max(r_data(3,1:t))]);
+                    hold(app.v_h_t_graph, "on");                    
                     ylabel(app.v_h_t_graph, 'Height/m');
 
                 end
@@ -409,10 +524,18 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
                 scatter(app.final_destination, landing_points(1,:), landing_points(2,:), 'red','*');
                 hold(app.final_destination,"on");
 
+                app.Lamp.Color = 'green';
+
             catch ME
                 % エラーが発生した場合の処理
                 errordlg(['Error starting simulation: ' ME.message], 'Simulation Error');
             end
+        end
+
+        % Button pushed function: StopButton
+        function StopButtonPushed(app, event)
+            app.Lamp.Color = 'green';
+            return;
         end
     end
 
@@ -435,41 +558,31 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             app.rocket.Title = 'Configuration';
             app.rocket.Position = [1 445 539 174];
 
-            % Create checking_kg_or_g
-            app.checking_kg_or_g = uidropdown(app.rocket);
-            app.checking_kg_or_g.Items = {'kg', 'g'};
-            app.checking_kg_or_g.ValueChangedFcn = createCallbackFcn(app, @checking_kg_or_gValueChanged, true);
-            app.checking_kg_or_g.FontSize = 8;
-            app.checking_kg_or_g.Position = [485 2 47 22];
-            app.checking_kg_or_g.Value = 'g';
-
             % Create Label_4
             app.Label_4 = uilabel(app.rocket);
             app.Label_4.HorizontalAlignment = 'right';
             app.Label_4.Interpreter = 'latex';
-            app.Label_4.Position = [34 114 191 24];
+            app.Label_4.Position = [17 114 180 24];
             app.Label_4.Text = 'Area of longitudinal section / m$^{2}$';
 
             % Create cross_sectional_area
             app.cross_sectional_area = uieditfield(app.rocket, 'numeric');
             app.cross_sectional_area.ValueChangedFcn = createCallbackFcn(app, @cross_sectional_areaValueChanged, true);
-            app.cross_sectional_area.FontSize = 9;
-            app.cross_sectional_area.Position = [224 113 53 28];
+            app.cross_sectional_area.Position = [207 113 70 28];
             app.cross_sectional_area.Value = 0.000625;
 
-            % Create gLabel
-            app.gLabel = uilabel(app.rocket);
-            app.gLabel.HorizontalAlignment = 'right';
-            app.gLabel.Interpreter = 'latex';
-            app.gLabel.Position = [395 88 91 22];
-            app.gLabel.Text = 'Constant Mass';
+            % Create Label_12
+            app.Label_12 = uilabel(app.rocket);
+            app.Label_12.HorizontalAlignment = 'right';
+            app.Label_12.Interpreter = 'latex';
+            app.Label_12.Position = [275 117 214 22];
+            app.Label_12.Text = 'Cross-sectional area of fuselage / m$^{2}$';
 
-            % Create constant_weight
-            app.constant_weight = uieditfield(app.rocket, 'numeric');
-            app.constant_weight.ValueChangedFcn = createCallbackFcn(app, @constant_weightValueChanged, true);
-            app.constant_weight.FontSize = 8;
-            app.constant_weight.Position = [495 87 37 25];
-            app.constant_weight.Value = 26.3;
+            % Create cross_sectional_side_area
+            app.cross_sectional_side_area = uieditfield(app.rocket, 'numeric');
+            app.cross_sectional_side_area.ValueChangedFcn = createCallbackFcn(app, @cross_sectional_side_areaValueChanged, true);
+            app.cross_sectional_side_area.Position = [495 114 39 29];
+            app.cross_sectional_side_area.Value = 0.001;
 
             % Create Label_2
             app.Label_2 = uilabel(app.rocket);
@@ -481,9 +594,21 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create drag_coefficient
             app.drag_coefficient = uieditfield(app.rocket, 'numeric');
             app.drag_coefficient.ValueChangedFcn = createCallbackFcn(app, @drag_coefficientValueChanged, true);
-            app.drag_coefficient.FontSize = 8;
             app.drag_coefficient.Position = [238 77 39 27];
             app.drag_coefficient.Value = 0.3;
+
+            % Create gLabel
+            app.gLabel = uilabel(app.rocket);
+            app.gLabel.HorizontalAlignment = 'right';
+            app.gLabel.Interpreter = 'latex';
+            app.gLabel.Position = [395 88 91 22];
+            app.gLabel.Text = 'Constant Mass';
+
+            % Create constant_weight
+            app.constant_weight = uieditfield(app.rocket, 'numeric');
+            app.constant_weight.ValueChangedFcn = createCallbackFcn(app, @constant_weightValueChanged, true);
+            app.constant_weight.Position = [495 87 37 25];
+            app.constant_weight.Value = 26.3;
 
             % Create InjectiontimesLabel
             app.InjectiontimesLabel = uilabel(app.rocket);
@@ -495,7 +620,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create thrust_time
             app.thrust_time = uieditfield(app.rocket, 'numeric');
             app.thrust_time.ValueChangedFcn = createCallbackFcn(app, @thrust_timeValueChanged, true);
-            app.thrust_time.FontSize = 8;
             app.thrust_time.Position = [241 45 36 27];
             app.thrust_time.Value = 1.6;
 
@@ -509,7 +633,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create fuel_weight_begin
             app.fuel_weight_begin = uieditfield(app.rocket, 'numeric');
             app.fuel_weight_begin.ValueChangedFcn = createCallbackFcn(app, @fuel_weight_beginValueChanged, true);
-            app.fuel_weight_begin.FontSize = 8;
             app.fuel_weight_begin.Position = [495 60 37 25];
             app.fuel_weight_begin.Value = 25.8;
 
@@ -523,7 +646,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create total_impulse
             app.total_impulse = uieditfield(app.rocket, 'numeric');
             app.total_impulse.ValueChangedFcn = createCallbackFcn(app, @total_impulseValueChanged, true);
-            app.total_impulse.FontSize = 8;
             app.total_impulse.Position = [241 13 36 28];
             app.total_impulse.Value = 10;
 
@@ -531,35 +653,27 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             app.kgLabel = uilabel(app.rocket);
             app.kgLabel.HorizontalAlignment = 'right';
             app.kgLabel.Interpreter = 'latex';
-            app.kgLabel.Position = [339 31 150 22];
+            app.kgLabel.Position = [327 31 150 22];
             app.kgLabel.Text = ' Fuel mass at end of burn ';
 
             % Create fuel_weight_end
             app.fuel_weight_end = uieditfield(app.rocket, 'numeric');
             app.fuel_weight_end.ValueChangedFcn = createCallbackFcn(app, @fuel_weight_endValueChanged2, true);
-            app.fuel_weight_end.FontSize = 8;
-            app.fuel_weight_end.Position = [495 32 37 22];
+            app.fuel_weight_end.Position = [488 32 44 22];
             app.fuel_weight_end.Value = 12.48;
-
-            % Create Label_12
-            app.Label_12 = uilabel(app.rocket);
-            app.Label_12.HorizontalAlignment = 'right';
-            app.Label_12.Interpreter = 'latex';
-            app.Label_12.Position = [275 117 214 22];
-            app.Label_12.Text = 'Cross-sectional area of fuselage / m$^{2}$';
-
-            % Create cross_sectional_side_area
-            app.cross_sectional_side_area = uieditfield(app.rocket, 'numeric');
-            app.cross_sectional_side_area.ValueChangedFcn = createCallbackFcn(app, @cross_sectional_side_areaValueChanged, true);
-            app.cross_sectional_side_area.FontSize = 8;
-            app.cross_sectional_side_area.Position = [495 114 39 29];
-            app.cross_sectional_side_area.Value = 0.001;
 
             % Create WeightunitsettingLabel
             app.WeightunitsettingLabel = uilabel(app.rocket);
             app.WeightunitsettingLabel.Interpreter = 'latex';
             app.WeightunitsettingLabel.Position = [361 2 114 22];
             app.WeightunitsettingLabel.Text = 'Weight unit setting';
+
+            % Create checking_kg_or_g
+            app.checking_kg_or_g = uidropdown(app.rocket);
+            app.checking_kg_or_g.Items = {'kg', 'g'};
+            app.checking_kg_or_g.ValueChangedFcn = createCallbackFcn(app, @checking_kg_or_gValueChanged, true);
+            app.checking_kg_or_g.Position = [485 2 47 22];
+            app.checking_kg_or_g.Value = 'g';
 
             % Create figures
             app.figures = uitabgroup(app.UIFigure);
@@ -588,13 +702,8 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             title(app.orbit, 'Orbit')
             xlabel(app.orbit, 'West')
             ylabel(app.orbit, 'North')
-            zlabel(app.orbit, 'Z')
+            zlabel(app.orbit, 'Height')
             app.orbit.XAxisLocation = 'origin';
-            app.orbit.XTick = [0 0.2 0.4 0.6 0.8 1];
-            app.orbit.XTickLabel = {''; '0.2'; '0.4'; ''; '0.8'; '1'};
-            app.orbit.XGrid = 'on';
-            app.orbit.YGrid = 'on';
-            app.orbit.ZGrid = 'on';
             app.orbit.ButtonDownFcn = createCallbackFcn(app, @ButtonValueChanged, true);
             app.orbit.Position = [8 13 389 281];
 
@@ -604,8 +713,8 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
             % Create v_t_graph
             app.v_t_graph = uiaxes(app.vtgraphTab);
-            title(app.v_t_graph, 'v-t graph')
-            xlabel(app.v_t_graph, 'TIme/s')
+            title(app.v_t_graph, 'V-T graph')
+            xlabel(app.v_t_graph, 'Time/s')
             ylabel(app.v_t_graph, 'Velocity/ms^{-1}')
             zlabel(app.v_t_graph, 'Z')
             app.v_t_graph.Position = [8 3 398 283];
@@ -616,8 +725,8 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
             % Create h_t_graph
             app.h_t_graph = uiaxes(app.htgraphTab);
-            title(app.h_t_graph, 'h-t graph')
-            xlabel(app.h_t_graph, 'TIme/s')
+            title(app.h_t_graph, 'H-Tgraph')
+            xlabel(app.h_t_graph, 'Time/s')
             ylabel(app.h_t_graph, 'Height/m')
             zlabel(app.h_t_graph, 'Z')
             app.h_t_graph.Position = [2 3 403 291];
@@ -628,8 +737,8 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
 
             % Create v_h_t_graph
             app.v_h_t_graph = uiaxes(app.vhtTab);
-            title(app.v_h_t_graph, 'v-h-t')
-            xlabel(app.v_h_t_graph, 'X')
+            title(app.v_h_t_graph, 'V-H-T graph')
+            xlabel(app.v_h_t_graph, 'Time / s')
             ylabel(app.v_h_t_graph, 'Y')
             zlabel(app.v_h_t_graph, 'Z')
             app.v_h_t_graph.Position = [5 3 389 289];
@@ -656,7 +765,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create parachute_time
             app.parachute_time = uieditfield(app.Panel_parachute, 'numeric');
             app.parachute_time.ValueChangedFcn = createCallbackFcn(app, @parachute_timeValueChanged, true);
-            app.parachute_time.FontSize = 8;
             app.parachute_time.Position = [254 139 39 27];
             app.parachute_time.Value = 3;
 
@@ -670,7 +778,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create parachute_S
             app.parachute_S = uieditfield(app.Panel_parachute, 'numeric');
             app.parachute_S.ValueChangedFcn = createCallbackFcn(app, @parachute_SValueChanged, true);
-            app.parachute_S.FontSize = 8;
             app.parachute_S.Position = [241 98 52 28];
             app.parachute_S.Value = 0.1;
 
@@ -684,7 +791,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create drag_coefficient_parachute
             app.drag_coefficient_parachute = uieditfield(app.Panel_parachute, 'numeric');
             app.drag_coefficient_parachute.ValueChangedFcn = createCallbackFcn(app, @drag_coefficient_parachuteValueChanged, true);
-            app.drag_coefficient_parachute.FontSize = 8;
             app.drag_coefficient_parachute.Position = [241 58 52 30];
             app.drag_coefficient_parachute.Value = 3;
 
@@ -698,7 +804,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create C_xo
             app.C_xo = uieditfield(app.Panel_parachute, 'numeric');
             app.C_xo.ValueChangedFcn = createCallbackFcn(app, @C_xoValueChanged, true);
-            app.C_xo.FontSize = 8;
             app.C_xo.Position = [241 15 52 30];
             app.C_xo.Value = 2;
 
@@ -717,7 +822,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create rho
             app.rho = uieditfield(app.fundamental_details, 'numeric');
             app.rho.ValueChangedFcn = createCallbackFcn(app, @rhoValueChanged, true);
-            app.rho.FontSize = 8;
             app.rho.Position = [164 184 65 33];
             app.rho.Value = 1.225;
 
@@ -731,7 +835,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create gravitational_acceleration
             app.gravitational_acceleration = uieditfield(app.fundamental_details, 'numeric');
             app.gravitational_acceleration.ValueChangedFcn = createCallbackFcn(app, @gravitational_accelerationValueChanged, true);
-            app.gravitational_acceleration.FontSize = 8;
             app.gravitational_acceleration.Position = [165 143 64 34];
             app.gravitational_acceleration.Value = 9.8;
 
@@ -745,9 +848,7 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create wind_speed
             app.wind_speed = uieditfield(app.fundamental_details, 'numeric');
             app.wind_speed.ValueChangedFcn = createCallbackFcn(app, @wind_speedValueChanged, true);
-            app.wind_speed.FontSize = 8;
             app.wind_speed.Position = [164 100 65 34];
-            app.wind_speed.Value = 1.5;
 
             % Create WinddirectiondegLabel
             app.WinddirectiondegLabel = uilabel(app.fundamental_details);
@@ -759,7 +860,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create wind_degree
             app.wind_degree = uieditfield(app.fundamental_details, 'numeric');
             app.wind_degree.ValueChangedFcn = createCallbackFcn(app, @wind_degreeValueChanged, true);
-            app.wind_degree.FontSize = 8;
             app.wind_degree.Position = [164 60 65 32];
 
             % Create Label_10
@@ -772,48 +872,29 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create wind_effectness
             app.wind_effectness = uieditfield(app.fundamental_details, 'numeric');
             app.wind_effectness.ValueChangedFcn = createCallbackFcn(app, @wind_effectnessValueChanged, true);
-            app.wind_effectness.FontSize = 8;
             app.wind_effectness.Position = [164 18 64 31];
-            app.wind_effectness.Value = 0.1;
-
-            % Create simulation_details
-            app.simulation_details = uipanel(app.UIFigure);
-            app.simulation_details.Title = 'Simulation setting';
-            app.simulation_details.Position = [380 8 250 134];
-
-            % Create SimulationtimesLabel
-            app.SimulationtimesLabel = uilabel(app.simulation_details);
-            app.SimulationtimesLabel.HorizontalAlignment = 'right';
-            app.SimulationtimesLabel.Interpreter = 'latex';
-            app.SimulationtimesLabel.Position = [17 63 157 22];
-            app.SimulationtimesLabel.Text = 'Simulation time / s';
-
-            % Create simulation_time
-            app.simulation_time = uieditfield(app.simulation_details, 'numeric');
-            app.simulation_time.ValueChangedFcn = createCallbackFcn(app, @simulation_timeValueChanged, true);
-            app.simulation_time.FontSize = 8;
-            app.simulation_time.Position = [180 57 46 34];
-            app.simulation_time.Value = 100;
-
-            % Create Label
-            app.Label = uilabel(app.simulation_details);
-            app.Label.HorizontalAlignment = 'right';
-            app.Label.Interpreter = 'latex';
-            app.Label.Position = [25 14 120 29];
-            app.Label.Text = 'Number of attempts';
-
-            % Create num_simulations
-            app.num_simulations = uieditfield(app.simulation_details, 'numeric');
-            app.num_simulations.ValueChangedFcn = createCallbackFcn(app, @num_simulationsValueChanged, true);
-            app.num_simulations.FontSize = 8;
-            app.num_simulations.Position = [153 11 73 34];
-            app.num_simulations.Value = 1;
 
             % Create InitializeallgraphsButton
             app.InitializeallgraphsButton = uibutton(app.UIFigure, 'push');
             app.InitializeallgraphsButton.ButtonPushedFcn = createCallbackFcn(app, @InitializeallgraphsButtonPushed, true);
             app.InitializeallgraphsButton.Position = [831 234 129 49];
             app.InitializeallgraphsButton.Text = 'Initialize all graphs';
+
+            % Create CountLabel
+            app.CountLabel = uilabel(app.UIFigure);
+            app.CountLabel.Position = [571 206 35 51];
+            app.CountLabel.Text = 'Count';
+
+            % Create numCount
+            app.numCount = uilabel(app.UIFigure);
+            app.numCount.Position = [630 215 54 33];
+            app.numCount.Text = '0';
+
+            % Create start_button
+            app.start_button = uibutton(app.UIFigure, 'state');
+            app.start_button.ValueChangedFcn = createCallbackFcn(app, @ButtonValueChanged, true);
+            app.start_button.Text = 'Simulation start';
+            app.start_button.Position = [748 181 212 48];
 
             % Create Panel_launch_deg
             app.Panel_launch_deg = uipanel(app.UIFigure);
@@ -830,7 +911,6 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create theta
             app.theta = uieditfield(app.Panel_launch_deg, 'numeric');
             app.theta.ValueChangedFcn = createCallbackFcn(app, @thetaValueChanged, true);
-            app.theta.FontSize = 8;
             app.theta.Position = [157 93 56 34];
 
             % Create Image
@@ -849,14 +929,53 @@ classdef rocket_orbit_simulator_test_exported < matlab.apps.AppBase
             % Create phi
             app.phi = uieditfield(app.Panel_launch_deg, 'numeric');
             app.phi.ValueChangedFcn = createCallbackFcn(app, @phiValueChanged, true);
-            app.phi.FontSize = 8;
             app.phi.Position = [157 52 57 34];
 
-            % Create start_button
-            app.start_button = uibutton(app.UIFigure, 'state');
-            app.start_button.ValueChangedFcn = createCallbackFcn(app, @ButtonValueChanged, true);
-            app.start_button.Text = 'Simulation start';
-            app.start_button.Position = [748 181 212 48];
+            % Create StopButton
+            app.StopButton = uibutton(app.UIFigure, 'push');
+            app.StopButton.ButtonPushedFcn = createCallbackFcn(app, @StopButtonPushed, true);
+            app.StopButton.Position = [766 115 194 48];
+            app.StopButton.Text = 'Stop';
+
+            % Create simulation_details
+            app.simulation_details = uipanel(app.UIFigure);
+            app.simulation_details.Title = 'Simulation setting';
+            app.simulation_details.Position = [380 8 250 134];
+
+            % Create SimulationtimesLabel
+            app.SimulationtimesLabel = uilabel(app.simulation_details);
+            app.SimulationtimesLabel.HorizontalAlignment = 'right';
+            app.SimulationtimesLabel.Interpreter = 'latex';
+            app.SimulationtimesLabel.Position = [17 63 157 22];
+            app.SimulationtimesLabel.Text = 'Simulation time / s';
+
+            % Create simulation_time
+            app.simulation_time = uieditfield(app.simulation_details, 'numeric');
+            app.simulation_time.ValueChangedFcn = createCallbackFcn(app, @simulation_timeValueChanged, true);
+            app.simulation_time.Position = [180 57 46 34];
+            app.simulation_time.Value = 100;
+
+            % Create Label
+            app.Label = uilabel(app.simulation_details);
+            app.Label.HorizontalAlignment = 'right';
+            app.Label.Interpreter = 'latex';
+            app.Label.Position = [25 14 120 29];
+            app.Label.Text = 'Number of attempts';
+
+            % Create num_simulations
+            app.num_simulations = uieditfield(app.simulation_details, 'numeric');
+            app.num_simulations.ValueChangedFcn = createCallbackFcn(app, @num_simulationsValueChanged, true);
+            app.num_simulations.Position = [153 11 73 34];
+            app.num_simulations.Value = 1;
+
+            % Create TextArea
+            app.TextArea = uitextarea(app.UIFigure);
+            app.TextArea.Position = [684 29 179 70];
+            app.TextArea.Value = {'If the lamp color is:'; 'Green: Stop'; 'Red: On going'; 'Yellow: Something happen'};
+
+            % Create Lamp
+            app.Lamp = uilamp(app.UIFigure);
+            app.Lamp.Position = [886 46 37 37];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
